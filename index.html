@@ -1,0 +1,327 @@
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1 shrink-to-fit=yes, user-scalable=no">
+        <script src="js/jquery-3.3.1.min.js"></script>
+        <script src='js/winwheel.min.js'></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.0.2/TweenMax.min.js"></script>
+        <link rel="stylesheet" href="css/style.css">
+        <title>Spin the Wheel</title>
+    </head>
+    <style>
+        body {
+            align-content: center;
+            width: auto;
+            height: auto;
+            background: url(assets/bgg.jpg) no-repeat center center fixed;
+            background-size: cover;
+        }
+    </style>
+    <body>
+        
+        <div id="modal-mechanics" class="modal">
+            <form class="modal-content animate" action="/action_page.php">           
+                <div class="imgcontainer">
+                    <span onclick="document.getElementById('modal-mechanics').style.display='none'" class="close" title="Close PopUp">&times;</span>
+                    <h1 style="text-align:center">Mechanics:</h1>
+                </div>
+                <div class="container">
+                    <p style="text-align: justify; margin-left: 55; margin-right: 10">Spin the wheel to 
+                        hit <br>the jackpot and win<br>
+                    
+                        
+                        <h1 style="text-align: center">Goodluck!</h1> </p>
+                </div>
+            </form>
+        </div>
+
+        <div id="modal-win" class="modal" >
+            <form class="modal-popup-content animate" action="/action_page.php">           
+                <div class="imgcontainer">
+                    <img src="assets/winRibbon.png" style="margin-bottom: 50 ; width: 80%" alt="Win" class="" >
+                    <span onclick="document.getElementById('modal-win').style.display='none'" class="close" title="Close PopUp">&times;</span>
+                    <h1 style="text-align:center; color: yellow">JACKPOT</h1>
+                    <p class="" style="color:white">Today is your lucky day!</p>
+                    <!-- <img src="assets/winChum.png" style="margin-bottom: 10 ; width: 60%" alt="win" class="" >  -->
+                </div>
+                <div class="">
+                    <h1 style="text-align: center; color:yellow"class="">YOU WIN</h1>
+                </div>
+                <img src="assets/claim_btn.png" alt="claim" onClick="resetWheel();" class="center" width = "37%">
+            </form>
+        </div>
+
+        <div id="modal-lose" class="modal" >
+                <form class="modal-popup-content animate" action="/action_page.php">           
+                    <div class="imgcontainer">
+                        <img src="assets/oh_no_red.png" style="margin-bottom: 50 ; width: 80%" alt="Lose" class="" ><img onclick=exit(); src="assets/Exit_48.png" class="close" title="Cloe PopUp" alt="Exit">
+                        
+                        <h1 style="text-align:center; color: yellow">SORRY</h1>
+                        <p class="" style="color:white">Today is not your lucky day.</p>
+                        <!-- <img src="assets/loseChum.png" style="margin-bottom: 10 ; width: 60%" alt="Lose" class="" >  -->
+                    </div>
+                    <img src="assets/playagain.png" alt="reset" onClick="startSpin();" class="center">
+                </form>
+        </div>
+
+        <div id="modal-respin" class="modal" >
+                <form class="modal-popup-content animate" style="margin-top: 300" action="/action_page.php">           
+                        <div class="imgcontainer">
+                        <h1 style="text-align:center; color: yellow">SPIN AGAIN</h1>
+                        <p class="center" style="color:white">Free spin for you!</p>
+                    </div>
+                    <img src="assets/playagain.png" alt="reset" onClick="freeSpin();" class="center">
+                </form>
+        </div> 
+
+        <div id="modal-coins" class="modal" >
+            <form class="modal-popup-content animate" style="margin-top: 300" action="/action_page.php">           
+                <div class="imgcontainer">
+                    <h1 style="text-align:center; color: yellow">Coins!!!</h1>
+                    <p class="" style="color:white" id="coins_gained"></p>
+                </div>
+                <img src="assets/Button_claim.png" alt="reset" onClick="resetWheel();" class="center">
+            </form>
+        </div>
+
+        <div class="center">
+                <img id="spinButton" src="assets/spin_btn.png" alt="spin" onClick="startSpin();" style="margin-top:-79px ; position: relative;width:130px;float:left;top:137px" display="block">
+            <img src="assets/title_yellow.png" style="margin-bottom: 10 ; width: 80% " alt="Logo" class="center">
+
+            <div class="main_container" id="id_main_container">
+                <div class="container_inner" id="display_div_id"></div>
+                <!-- <div id="user_container">  <img src="assets/Button_claim.png" alt="reset" onClick="resetWheel();" class="center"></div> -->
+               
+            </div>
+                <canvas id='canvas' width='480' height='' class=""></canvas>
+                <canvas id='canvasPointer' width='480' height='' class=""></canvas>
+			<div>
+<!-- <img id="spinButton" src="assets/spin_btn.png" alt="spin" onClick="startSpin();" style="margin-top:-32px ; position: relative;width:130px;float:left" display="block"> -->
+			</div>
+                
+
+        </div>
+
+
+
+        <script>
+            //
+            var canvas = document.getElementById("canvas");
+            var newHeight = window.innerHeight;
+            var newWidth = window.innerWidth;
+            var new_span = document.createElement('span');
+            var canSpin = true;
+            var pointer = document.getElementById("prizePointer")
+            
+
+            $(window).load(document.getElementById('modal-mechanics').style.display='block')
+            var modal = document.getElementById('modal-mechanics');
+            window.onload = function(event) 
+            {
+                $('canvas').css('margin-top', 10);
+                $('canvas').css('margin-bottom', -100);
+                // new_span.className = 'num_tiles';
+                // new_span.innerText = coins;
+                display_div.appendChild(new_span);
+                coinCounter();
+                resizeCanvas();
+                drawPointer();
+                wheel.draw();
+            }
+
+            // Create second wheel where some of the segments are different sizes to the others.
+            var wheel = new Winwheel({
+                'canvasId'     : 'canvas',
+                'numSegments'  : 16,        // The number of segments must be specified.
+                'drawMode'     : 'image',   // drawMode must be set to image.   
+                'pointerAngle' : 0,        // Ensure this is set correctly
+                'centerX'      : 480/2,
+                'centerY'      : 280,
+                'innerRadius'  : 25,
+                'clearTheCanvas'    : false,
+                'segments'     :            // Pass in segment parameters (text is optional, not displayed).
+                [
+                    {'text' : 'Jackpot!!!'},
+                    {'text' : 'Missed it! Maybe tomorrow!', 'size' : 29},    
+                    {'text' : 'Nope. Sorry'},
+                    {'text' : 'Better luck next time', 'size' : 29},    
+                    {'text' : 'Jackpot!!!'},
+                    {'text' : 'Oops. Sorry', 'size' : 28},    
+                    {'text' : 'Better luck next time'},
+                    {'text' : 'Free spin', 'size' : 29},
+                    {'text' : 'Jackpot!!!'},
+                    {'text' : 'Oops. Sorry', 'size' : 29},
+                    {'text' : 'Nope. Sorry'},
+                    {'text' : 'Maybe tomorrow', 'size' : 29},
+                    {'text' : 'Jackpot!!!'},
+                    {'text' : 'Not your lucky day!', 'size' : 29},
+                    {'text' : 'Sorry! Not today!'},
+                    {'text' : 'You missed it! Sorry!', 'size' : 29},
+                ],
+                'animation' :                   // Note animation properties passed in constructor parameters.
+                {
+                    'type'     : 'spinToStop',
+                    'duration' : 5,
+                    'spins'    : 8,
+        
+                    // Remember to do something after the animation has finished specify callback function.
+                    'callbackFinished' : 'alertPrize()',
+                }
+            });
+
+            // This function called after the spin animation has stopped.
+            function alertPrize()
+            {
+                // Call getIndicatedSegment() function to return pointer to the segment pointed to on wheel.
+                var winningSegment = wheel.getIndicatedSegment();
+        
+                // Basic alert of the segment text which is the prize name.
+                console.log(winningSegment.text);
+                if(winningSegment.text == 'Jackpot!!!'){
+                    
+                    winPopUp();
+                    // coins += 100;
+                }else if(winningSegment.text == 'Free spin'){
+                    reSpin();
+                }
+                else{
+                    losePopUp();
+                }
+            }
+       
+            // Vars used by the code in this page to do power controls.
+            var wheelSpinning = false;
+            wheel.animation.spins = 6;
+            
+            function startSpin()
+            {
+                if(coins >= 50)
+                {
+                    resetWheel();
+                    $(window).load(document.getElementById('spinButton').style.display='none')
+                    wheel.startAnimation();
+                    // coins -= 50;
+                    coinCounter();
+                    wheelSpinning = true;
+                }else{
+                    alert("Not enough Coins!");
+                }
+            }
+
+			function freeSpin()
+			{
+				resetWheel();
+				$(window).load(document.getElementById('spinButton').style.display='none')
+				wheel.startAnimation();
+				coinCounter();
+				wheelSpinning = true;
+			}
+
+            var pointerImg = new Image();
+            
+            function drawPointer(){
+                var c = document.getElementById("canvasPointer");
+                var ctx = c.getContext("2d");
+                console.log("Load pointerImg");
+                if(ctx){
+                    ctx.save();
+                    ctx.drawImage(pointerImg, 220, 0);   // Draw the image at the specified x and y.
+                    ctx.restore();  
+                }
+            };
+
+            pointerImg.src = 'assets/Mark.png';
+
+            // Create new image object in memory.
+            var loadedImg = new Image();
+
+            // Create callback to execute once the image has finished loading.
+            loadedImg.onload = function()
+            {
+                wheel.wheelImage = loadedImg;    // Make wheelImage equal the loaded image object.
+                wheel.draw(clearTheCanvas=false);                    // Also call draw function to render the wheel.
+            }
+
+            // Set the image source, once complete this will trigger the onLoad callback (above).
+            loadedImg.src = "assets/wheel101.png";
+
+            function resetWheel()
+            {
+                wheel.stopAnimation(false);  // Stop the animation, false as param so does not call callback function.
+                wheel.rotationAngle = 0;     // Re-set the wheel angle to 0 degrees.
+                wheel.draw(clearTheCanvas=false);                // Call draw to render changes to the wheel.
+                resetModal();
+                coinCounter();
+                wheelSpinning = false;          // Reset to false to power buttons and spin can be clicked again.
+            }
+
+            var coins = 1000;
+            var coinsGained;
+            var display_str = "";
+            var display_div = document.getElementById("display_div_id");
+
+
+
+
+
+
+            function coinCounter()
+            {
+                // new_span.innerText = coins;
+            }
+            function resizeCanvas()
+            {
+                canvas.height = newHeight/1.1;
+                console.log(canvas.height);
+                console.log(canvas.width);
+            }
+            function exit()
+            {
+                alert('Exiting...');
+                resetModal();
+                wheel.draw(true);
+            }
+            function winPopUp()
+            {
+                $(window).load(document.getElementById('modal-win').style.display='block')
+                $(window).load(document.getElementById('spinButton').style.display='none')               
+                var modal = document.getElementById('modal-win');
+            }
+            function losePopUp()
+            {
+                $(window).load(document.getElementById('modal-lose').style.display='block')
+                $(window).load(document.getElementById('spinButton').style.display='none')
+                var modal = document.getElementById('modal-lose');
+            }
+            function reSpin()
+            {
+                $(window).load(document.getElementById('modal-respin').style.display='block')
+                $(window).load(document.getElementById('spinButton').style.display='none')
+                var modal = document.getElementById('modal-respin');
+            }
+            function coinPopup()
+            {
+                $(window).load(document.getElementById('modal-coins').style.display='block')
+                $(window).load(document.getElementById('spinButton').style.display='none')
+                var modal = document.getElementById('modal-coins');
+                var coinsDisplay = document.getElementById('coins_gained');
+                coinsDisplay.innerHTML = "You gained "+ coinsGained;
+            }
+            function resetModal()
+            {
+                $(window).load(document.getElementById('modal-win').style.display='none')
+                var modalWin = document.getElementById('modal-win');
+
+                $(window).load(document.getElementById('modal-lose').style.display='none')
+                var modalLoss = document.getElementById('modal-lose');
+
+                $(window).load(document.getElementById('modal-respin').style.display='none')
+                var modalSpin = document.getElementById('modal-respin');
+
+                $(window).load(document.getElementById('modal-coins').style.display='none')
+                var modalCoins = document.getElementById('modal-coins')
+
+                $(window).load(document.getElementById('spinButton').style.display='block')
+            }
+        </script>
+    </body>
+</html>
